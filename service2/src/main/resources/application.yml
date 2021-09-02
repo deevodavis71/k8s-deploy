@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: service2
+
+server:
+  port: 11000
+  servlet:
+    context-path: /service2
+
+services:
+  endpoint:
+    service1: http://localhost:10000
+    service2: http://localhost:11000
+
+---
+
+spring:
+  profiles: kub
+
+server:
+  port: 80
+
+services:
+  endpoint:
+    service1: http://service1
+    service2: http://service2

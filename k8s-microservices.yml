@@ -1,0 +1,154 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: service1
+    version: "1.0"
+  name: service1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: service1
+    spec:
+      containers:
+      - name: service1
+        image: microservice-service1:1
+        imagePullPolicy: Never
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: kub
+        ports:
+        - containerPort: 80
+        resources: {}
+status: {}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: service2
+    version: "1.0"
+  name: service2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service2
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: service2
+    spec:
+      containers:
+      - name: service2
+        image: microservice-service2:1
+        imagePullPolicy: Never        
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: kub        
+        ports:
+        - containerPort: 80
+        resources: {}
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: service1
+  name: service1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+    name: http    
+  selector:
+    app: service1
+  type: NodePort
+status:
+  loadBalancer: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: service2
+  name: service2
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+    name: http    
+  selector:
+    app: service2
+  type: NodePort
+status:
+  loadBalancer: {}
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: service1
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - microservice-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /service1
+    rewrite:
+      uri: /service1
+    route:
+    - destination:
+        port:
+          number: 80
+        host: service1.default.svc.cluster.local
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: service2
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - microservice-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /service2
+    rewrite:
+      uri: /service2
+    route:
+    - destination:
+        port:
+          number: 80
+        host: service2.default.svc.cluster.local
+

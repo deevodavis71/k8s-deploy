@@ -1,0 +1,37 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: "jwt-example"
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  jwtRules:
+  - issuer: "https://dev-mbof2xy6.us.auth0.com/"
+    jwksUri: "https://dev-mbof2xy6.us.auth0.com/.well-known/jwks.json"
+
+---
+
+######################################################################
+# DENY all requests without JWT in Auth Header to the /other endpoint
+######################################################################
+
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: "frontend-ingress-deny"
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  action: DENY
+  rules:
+  - to:
+    - operation:
+        paths: ["/service1/other"]
+    from:
+    - source:
+        notRequestPrincipals: ["*"]
+

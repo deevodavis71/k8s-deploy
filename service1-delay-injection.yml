@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: service1-delay
+spec:
+  hosts:
+  - service1.default.svc.cluster.local
+  http:
+  - fault:
+      delay:
+        fixedDelay: 2s
+        percentage:
+          value: 100
+    route:
+    - destination:
+        host: service1.default.svc.cluster.local
